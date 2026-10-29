@@ -1,0 +1,13 @@
+{
+  "classes": [
+    "low",
+    "medium",
+    "high"
+  ],
+  "poids": [
+    1.0,
+    1.25,
+    1.0
+  ],
+  "jeu_variables": "comportement"
+}

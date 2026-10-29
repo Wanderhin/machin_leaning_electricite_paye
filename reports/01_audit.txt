@@ -1,0 +1,147 @@
+
+==============================================================================
+1. DIMENSIONS ET TYPES
+==============================================================================
+Lignes : 500,000   Colonnes : 15
+customer_id                         str
+phone_number                      int64
+operator                            str
+assessment_date                     str
+credit_score                      int64
+credit_rating                       str
+tenure_months                     int64
+avg_monthly_spend_ngn           float64
+recharge_frequency_per_month      int64
+payment_consistency_score       float64
+late_payment_count                int64
+account_type                        str
+loan_eligibility                   bool
+max_loan_amount_ngn             float64
+default_risk                        str
+
+==============================================================================
+2. VALEURS MANQUANTES
+==============================================================================
+                              manquantes  pourcentage
+customer_id                            0          0.0
+phone_number                           0          0.0
+operator                               0          0.0
+assessment_date                        0          0.0
+credit_score                           0          0.0
+credit_rating                          0          0.0
+tenure_months                          0          0.0
+avg_monthly_spend_ngn                  0          0.0
+recharge_frequency_per_month           0          0.0
+payment_consistency_score              0          0.0
+late_payment_count                     0          0.0
+account_type                           0          0.0
+loan_eligibility                       0          0.0
+max_loan_amount_ngn                    0          0.0
+default_risk                           0          0.0
+
+==============================================================================
+3. DOUBLONS
+==============================================================================
+Lignes entierement dupliquees : 0
+customer_id dupliques          : 13,661
+
+==============================================================================
+4. VARIABLE CIBLE : default_risk
+==============================================================================
+              effectif  pourcentage
+default_risk                       
+low             272889        54.58
+medium          115823        23.16
+high            111288        22.26
+
+Classe la plus rare = 22.3% des lignes. Desequilibre modere/faible.
+
+==============================================================================
+5. COLONNES CONSTANTES OU INUTILES
+==============================================================================
+Colonnes constantes : ['assessment_date']
+assessment_date : 1 valeur(s) distincte(s)
+
+==============================================================================
+6. VALEURS INVALIDES (hors plage logique)
+==============================================================================
+payment_consistency_score        invalides : 0
+tenure_months                    invalides : 0
+avg_monthly_spend_ngn            invalides : 0
+recharge_frequency_per_month     invalides : 0
+late_payment_count               invalides : 0
+credit_score                     invalides : 0
+max_loan_amount_ngn              invalides : 0
+
+==============================================================================
+7. STATISTIQUES DES VARIABLES NUMERIQUES
+==============================================================================
+                                 min       25%       50%       75%        max      mean       std
+credit_score                  300.00    608.00    769.00    931.00    1000.00    753.10    194.63
+tenure_months                   1.00     31.00     60.00     90.00     120.00     60.52     34.60
+avg_monthly_spend_ngn         500.05  12836.60  25226.36  37601.82   49999.93  25239.79  14287.84
+recharge_frequency_per_month    1.00      8.00     15.00     23.00      30.00     15.48      8.66
+payment_consistency_score       0.00      0.25      0.50      0.75       1.00      0.50      0.29
+late_payment_count              0.00      0.00      1.00      2.00      10.00      2.24      2.64
+max_loan_amount_ngn             0.00      0.00  30254.49  62228.40  149588.33  37001.95  36683.64
+
+==============================================================================
+8. VARIABLES CATEGORIELLES
+==============================================================================
+
+-- operator
+operator
+MTN        189846
+Airtel     140424
+Glo        120044
+9mobile     49686
+
+-- credit_rating
+credit_rating
+excellent    224918
+good         119607
+fair          94890
+poor          60585
+
+-- account_type
+account_type
+prepaid     425027
+postpaid     74973
+
+-- loan_eligibility
+loan_eligibility
+True     344525
+False    155475
+
+==============================================================================
+9. TEST DE FUITE DE DONNEES (data leakage)
+==============================================================================
+Principe : on entraine un petit arbre (profondeur 4) avec UNE SEULE colonne a la fois.
+Si une colonne seule predit presque parfaitement la cible, elle contient la reponse
+(ou en est derivee) -> a EXCLURE du modele final.
+
+                     colonne  F1_macro_seule verdict
+               credit_rating           0.454  normal
+            loan_eligibility           0.454  normal
+                credit_score           0.454  normal
+         max_loan_amount_ngn           0.454  normal
+          late_payment_count           0.420  normal
+               tenure_months           0.405  normal
+   payment_consistency_score           0.364  normal
+recharge_frequency_per_month           0.356  normal
+       avg_monthly_spend_ngn           0.330  normal
+                    operator           0.284  normal
+                account_type           0.180  normal
+
+Colonnes que je soupconnais a priori : credit_score, credit_rating, loan_eligibility, max_loan_amount_ngn
+
+==============================================================================
+10. NETTOYAGE
+==============================================================================
+Lignes supprimees (cible manquante/invalide) : 0
+Lignes dupliquees supprimees : 0
+customer_id dupliques supprimes (premiere occurrence gardee) : 13,661
+Colonnes retirees : ['phone_number', 'assessment_date']
+
+Lignes : 500,000 -> 486,339   Colonnes : 15 -> 13
+Fichier propre ecrit : ../data/processed/telecom_clean.csv

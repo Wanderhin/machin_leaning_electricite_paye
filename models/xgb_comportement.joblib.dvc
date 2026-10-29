@@ -1,0 +1,5 @@
+outs:
+- md5: 6845f6fd1f7341dba782fb4d33daab4c
+  size: 4034869
+  hash: md5
+  path: xgb_comportement.joblib

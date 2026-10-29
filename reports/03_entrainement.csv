@@ -1,0 +1,4 @@
+run,accuracy,f1_macro,precision_macro,recall_macro,auc_ovr_macro,log_loss,recall_low,recall_medium,recall_high
+dummy_reference,0.5459,0.2354,0.182,0.3333,0.5,16.3664,1.0,0.0,0.0
+xgb_comportement,0.6197,0.4589,0.4678,0.5151,0.6549,0.9611,0.8523,0.0267,0.6662
+xgb_complet,0.6382,0.4543,0.3996,0.5269,0.6477,0.9458,0.8859,0.0,0.695
