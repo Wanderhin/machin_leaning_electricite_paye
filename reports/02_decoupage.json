@@ -1,0 +1,30 @@
+{
+  "seed": 42,
+  "source": "telecom_clean.csv",
+  "decoupage": {
+    "train": {
+      "lignes": 340437,
+      "cible_pct": {
+        "low": 54.59,
+        "medium": 23.16,
+        "high": 22.25
+      }
+    },
+    "val": {
+      "lignes": 72951,
+      "cible_pct": {
+        "low": 54.59,
+        "medium": 23.16,
+        "high": 22.25
+      }
+    },
+    "test": {
+      "lignes": 72951,
+      "cible_pct": {
+        "low": 54.59,
+        "medium": 23.16,
+        "high": 22.25
+      }
+    }
+  }
+}
