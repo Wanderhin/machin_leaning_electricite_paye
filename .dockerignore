@@ -1,0 +1,36 @@
+# Environnements et depot
+.venv/
+.git/
+.github/
+.idea/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Donnees et suivi d'experiences : jamais dans l'image
+data/
+.dvc/
+.dvcignore
+mlflow.db
+mlartifacts/
+logs/
+notebooks/
+
+# Scripts d'entrainement (inutiles pour servir le modele)
+src/0*.py
+src/generer_donnees_ci.py
+
+# Tests et documents
+tests/
+pytest.ini
+cc.md
+HANDOFF*.md
+
+# Modeles : on ne garde que le modele final (copie explicitement dans le Dockerfile)
+models/*
+!models/model_final.joblib
+!models/decision_poids.json
+
+# Rapports : on ne garde que l'evaluation du test
+reports/*
+!reports/04_evaluation_test.json
