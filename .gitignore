@@ -1,0 +1,23 @@
+# Environnements et caches Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.idea/
+
+# Suivi MLflow local (reconstructible)
+mlflow.db
+mlartifacts/
+mlruns/
+
+# Journal de l'API : contient les entrees des clients rejoues
+logs/
+
+# Candidats du CT (non valides, volumineux)
+models/candidats/
+
+# Systeme
+.DS_Store
+Thumbs.db

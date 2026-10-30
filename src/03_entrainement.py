@@ -11,7 +11,12 @@ Trois "runs" sont enregistres dans MLflow :
 
     python src/03_entrainement.py
     mlflow ui --backend-store-uri sqlite:///mlflow.db        # pour visualiser (depuis la racine)
+
+Isolation d'un CANDIDAT (utilisee par le flow CT, etape 7) : par defaut le script ecrit dans models/ et reports/
+(comportement inchange). Pour ne PAS toucher au modele valide :
+    python src/03_entrainement.py --modeles-dir models/candidats/20261030_1200 --reports-dir models/candidats/20261030_1200/reports
 """
+import argparse
 import hashlib
 from pathlib import Path
 
@@ -29,8 +34,8 @@ from features import CLASSES, SEED, build_preprocessor, separer_X_y
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data" / "processed"
-MODELES = ROOT / "models"
-RAPPORT = ROOT / "reports" / "03_entrainement.csv"
+MODELES = ROOT / "models"                      # dossier par defaut (modele valide)
+REPORTS = ROOT / "reports"                     # dossier par defaut
 EXPERIENCE = "default_risk_telecom"
 
 PARAMS_XGB = dict(
@@ -89,7 +94,7 @@ def run_dummy(X_tr, y_tr, X_va, y_va, empreintes):
     return {"run": "dummy_reference", **m}
 
 
-def run_xgb(jeu, X_tr, y_tr, X_va, y_va, empreintes):
+def run_xgb(jeu, X_tr, y_tr, X_va, y_va, empreintes, modeles):
     nom = f"xgb_{jeu}"
     with mlflow.start_run(run_name=nom):
         mlflow.set_tags({"modele": "xgboost", "jeu_variables": jeu})
@@ -118,8 +123,8 @@ def run_xgb(jeu, X_tr, y_tr, X_va, y_va, empreintes):
         mlflow.log_dict({k: float(v) for k, v in sorted(importances.items(), key=lambda t: -t[1])},
                         "importance_variables_gain.json")
 
-        MODELES.mkdir(exist_ok=True)
-        chemin = MODELES / f"{nom}.joblib"
+        modeles.mkdir(parents=True, exist_ok=True)
+        chemin = modeles / f"{nom}.joblib"
         joblib.dump(pipeline, chemin)
         mlflow.log_artifact(str(chemin))
         mlflow.sklearn.log_model(pipeline, "model",
@@ -129,7 +134,7 @@ def run_xgb(jeu, X_tr, y_tr, X_va, y_va, empreintes):
     return {"run": nom, **m}
 
 
-def main():
+def main(modeles=MODELES, reports=REPORTS):
     train = pd.read_csv(DATA / "train.csv")
     val = pd.read_csv(DATA / "val.csv")
     X_tr, y_tr = separer_X_y(train)
@@ -140,17 +145,25 @@ def main():
     preparer_mlflow()
     resultats = [run_dummy(X_tr, y_tr, X_va, y_va, empreintes)]
     for jeu in ("comportement", "complet"):
-        resultats.append(run_xgb(jeu, X_tr, y_tr, X_va, y_va, empreintes))
+        resultats.append(run_xgb(jeu, X_tr, y_tr, X_va, y_va, empreintes, modeles))
 
     tableau = pd.DataFrame(resultats).set_index("run").round(4)
-    RAPPORT.parent.mkdir(exist_ok=True)
-    tableau.to_csv(RAPPORT)
+    rapport = reports / "03_entrainement.csv"
+    rapport.parent.mkdir(parents=True, exist_ok=True)
+    tableau.to_csv(rapport)
     print("\n=== Comparaison sur la VALIDATION ===")
     print(tableau[["accuracy", "f1_macro", "auc_ovr_macro", "recall_low", "recall_medium", "recall_high"]]
           .to_string())
-    print(f"\nTableau enregistre : {RAPPORT}")
+    print(f"\nModeles ecrits dans : {modeles}")
+    print(f"Tableau enregistre : {rapport}")
     print("Pour visualiser :  mlflow ui --backend-store-uri sqlite:///mlflow.db   (puis http://127.0.0.1:5000)")
 
 
 if __name__ == "__main__":
-    main()
+    ap = argparse.ArgumentParser(description="Etape 3 : entrainement XGBoost + MLflow")
+    ap.add_argument("--modeles-dir", type=Path, default=MODELES,
+                    help="dossier de sortie des .joblib (defaut : models/ ; CT : un dossier candidat)")
+    ap.add_argument("--reports-dir", type=Path, default=REPORTS,
+                    help="dossier de sortie du tableau CSV (defaut : reports/)")
+    a = ap.parse_args()
+    main(a.modeles_dir.resolve(), a.reports_dir.resolve())

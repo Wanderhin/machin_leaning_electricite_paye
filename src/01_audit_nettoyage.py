@@ -4,6 +4,9 @@ ETAPE 1 - Audit et nettoyage des donnees (telecom_credit_scoring_nigeria.csv)
 Ce script NE MODIFIE PAS votre fichier d'origine : il lit le CSV, affiche un rapport
 d'audit, puis ecrit une version nettoyee dans data/processed/telecom_clean.csv.
 
+Les chemins par defaut sont calcules a partir de l'emplacement de CE fichier (comme les scripts 02 a 05) :
+on peut le lancer depuis la racine du projet OU depuis src/ avec le meme resultat, sans jamais ecrire hors du projet.
+
 Utilisation (depuis la racine du projet, environnement virtuel active) :
     pip install pandas numpy scikit-learn
     python src/01_audit_nettoyage.py
@@ -19,6 +22,7 @@ from sklearn.metrics import f1_score
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 
+ROOT = Path(__file__).resolve().parents[1]
 TARGET = "default_risk"
 ORDRE_CIBLE = ["low", "medium", "high"]
 COLS_ID = ["customer_id", "phone_number"]
@@ -188,8 +192,8 @@ def main(chemin_in, chemin_out, chemin_rapport):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--input", default="../data/telecom_credit_scoring_nigeria.csv")
-    ap.add_argument("--output", default="../data/processed/telecom_clean.csv")
-    ap.add_argument("--report", default="../reports/01_audit.txt")
+    ap.add_argument("--input", default=str(ROOT / "data" / "telecom_credit_scoring_nigeria.csv"))
+    ap.add_argument("--output", default=str(ROOT / "data" / "processed" / "telecom_clean.csv"))
+    ap.add_argument("--report", default=str(ROOT / "reports" / "01_audit.txt"))
     a = ap.parse_args()
     main(a.input, a.output, a.report)
