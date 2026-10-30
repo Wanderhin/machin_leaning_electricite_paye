@@ -1,0 +1,126 @@
+schema: '2.0'
+stages:
+  audit_nettoyage:
+    cmd: python src/01_audit_nettoyage.py
+    deps:
+    - path: data/telecom_credit_scoring_nigeria.csv
+      hash: md5
+      md5: 3b13408c5fc88ebd4b7f3bf8ebfa8b3a
+      size: 51426327
+    - path: src/01_audit_nettoyage.py
+      hash: md5
+      md5: c8120fea2319e365a7648e89f551d861
+      size: 9407
+    outs:
+    - path: data/processed/telecom_clean.csv
+      hash: md5
+      md5: d740ecd744f681000a6080753efe62a8
+      size: 35765995
+    - path: reports/01_audit.txt
+      hash: md5
+      md5: f6edf4457d6300cffefcf75071141abc
+      size: 6672
+  decoupage:
+    cmd: python src/02_decoupage.py
+    deps:
+    - path: data/processed/telecom_clean.csv
+      hash: md5
+      md5: d740ecd744f681000a6080753efe62a8
+      size: 35765995
+    - path: src/02_decoupage.py
+      hash: md5
+      md5: b59730fffa274ffc2d167dd3862e7d23
+      size: 3367
+    - path: src/features.py
+      hash: md5
+      md5: c5f485755b9ec71e95a9c2b0637f0b36
+      size: 3353
+    outs:
+    - path: data/processed/test.csv
+      hash: md5
+      md5: 988909b50cbe2b05cddf1974cc262e5e
+      size: 5366489
+    - path: data/processed/train.csv
+      hash: md5
+      md5: 176982ca59e7dd4f1612bde7adb1bfb5
+      size: 25035280
+    - path: data/processed/val.csv
+      hash: md5
+      md5: de04ab7a31906ff235572059697317ab
+      size: 5364670
+    - path: reports/02_decoupage.json
+      hash: md5
+      md5: 815cdd0538cbbf4635034c7eaa8f0943
+      size: 526
+  entrainement:
+    cmd: python src/03_entrainement.py
+    deps:
+    - path: data/processed/train.csv
+      hash: md5
+      md5: 176982ca59e7dd4f1612bde7adb1bfb5
+      size: 25035280
+    - path: data/processed/val.csv
+      hash: md5
+      md5: de04ab7a31906ff235572059697317ab
+      size: 5364670
+    - path: src/03_entrainement.py
+      hash: md5
+      md5: 2cd395d1102f4cfb605d31becd40ca22
+      size: 7416
+    - path: src/features.py
+      hash: md5
+      md5: c5f485755b9ec71e95a9c2b0637f0b36
+      size: 3353
+    outs:
+    - path: models/xgb_complet.joblib
+      hash: md5
+      md5: 37ab17008d531dbca534b0f8f9fb20d6
+      size: 1135554
+    - path: models/xgb_comportement.joblib
+      hash: md5
+      md5: 6845f6fd1f7341dba782fb4d33daab4c
+      size: 4034869
+    - path: reports/03_entrainement.csv
+      hash: md5
+      md5: d8a0e75066f12ed2b73a961ff4b9678c
+      size: 333
+  evaluation:
+    cmd: python src/04_evaluation.py
+    deps:
+    - path: data/processed/test.csv
+      hash: md5
+      md5: 988909b50cbe2b05cddf1974cc262e5e
+      size: 5366489
+    - path: data/processed/val.csv
+      hash: md5
+      md5: de04ab7a31906ff235572059697317ab
+      size: 5364670
+    - path: models/xgb_comportement.joblib
+      hash: md5
+      md5: 6845f6fd1f7341dba782fb4d33daab4c
+      size: 4034869
+    - path: src/04_evaluation.py
+      hash: md5
+      md5: bcd00a156288d42d21caf2856eba0109
+      size: 12171
+    - path: src/features.py
+      hash: md5
+      md5: c5f485755b9ec71e95a9c2b0637f0b36
+      size: 3353
+    outs:
+    - path: models/decision_poids.json
+      hash: md5
+      md5: 525ae5ec88efb09cea1dea439cceac28
+      size: 150
+    - path: models/model_final.joblib
+      hash: md5
+      md5: 6845f6fd1f7341dba782fb4d33daab4c
+      size: 4034869
+    - path: reports/04_evaluation_test.json
+      hash: md5
+      md5: ee1e2ddc4cb5a607f047e725fb8c5d99
+      size: 2872
+    - path: reports/04_matrice_confusion_test.png
+      hash: md5
+      md5: 4012987d591f14809bc638eae5bfdb8c
+      size: 56212

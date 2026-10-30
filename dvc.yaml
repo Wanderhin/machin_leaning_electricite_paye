@@ -1,0 +1,66 @@
+# Pipeline reproductible : audit -> decoupage -> entrainement -> evaluation
+# Lancement : dvc repro      Graphe : dvc dag      Metriques : dvc metrics show
+#
+# Regles de ce fichier :
+#  - les gros fichiers (donnees, modeles) sont versionnes par DVC (cache + remote) ;
+#  - les petits rapports lisibles (cache: false) restent dans Git, pour etre relus dans les commits ;
+#  - mlflow.db / mlartifacts/ ne sont PAS des sorties : ils sont dans .gitignore (suivi local MLflow) ;
+#  - le CSV brut est une ENTREE : il reste suivi par son propre fichier .dvc.
+stages:
+  audit_nettoyage:
+    desc: Audit de qualite, test de fuite, nettoyage (doublons, valeurs invalides, colonnes inutiles)
+    cmd: python src/01_audit_nettoyage.py
+    deps:
+      - src/01_audit_nettoyage.py
+      - data/telecom_credit_scoring_nigeria.csv
+    outs:
+      - data/processed/telecom_clean.csv
+      - reports/01_audit.txt:
+          cache: false
+
+  decoupage:
+    desc: Decoupage train/val/test 70/15/15 stratifie (seed 42) et controle du pretraitement
+    cmd: python src/02_decoupage.py
+    deps:
+      - src/02_decoupage.py
+      - src/features.py
+      - data/processed/telecom_clean.csv
+    outs:
+      - data/processed/train.csv
+      - data/processed/val.csv
+      - data/processed/test.csv
+      - reports/02_decoupage.json:
+          cache: false
+
+  entrainement:
+    desc: Entrainement XGBoost (jeux A et B) et dummy de reference, suivi MLflow (validation uniquement)
+    cmd: python src/03_entrainement.py
+    deps:
+      - src/03_entrainement.py
+      - src/features.py
+      - data/processed/train.csv
+      - data/processed/val.csv
+    outs:
+      - models/xgb_comportement.joblib
+      - models/xgb_complet.joblib
+      - reports/03_entrainement.csv:
+          cache: false
+
+  evaluation:
+    desc: Evaluation finale sur le test (une seule fois), poids de decision, modele final, registre MLflow
+    cmd: python src/04_evaluation.py
+    deps:
+      - src/04_evaluation.py
+      - src/features.py
+      - models/xgb_comportement.joblib
+      - data/processed/val.csv
+      - data/processed/test.csv
+    outs:
+      - models/model_final.joblib
+      - models/decision_poids.json:
+          cache: false
+      - reports/04_matrice_confusion_test.png:
+          cache: false
+    metrics:
+      - reports/04_evaluation_test.json:
+          cache: false
