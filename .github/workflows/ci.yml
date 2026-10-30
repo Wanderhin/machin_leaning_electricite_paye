@@ -1,0 +1,40 @@
+# Pipeline CI minimale - Projet MLOps Impayes Telecom
+# Verifie la qualite du code (ruff) et lance les tests (pytest)
+# Aucune donnee reelle n'est utilisee : les tests creent un modele jetable.
+
+name: CI - Qualite du code
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  qualite:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v6
+
+      - name: Installation de Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Installation des dependances
+        run: |
+          python -m pip install --upgrade pip
+          # Dependances de l'API (versions epinglees)
+          pip install -r requirements-api.txt
+          # xgboost-cpu au lieu de xgboost (evite ~300 Mo NVIDIA sous Linux)
+          pip install xgboost-cpu==3.4.1
+          # Outils de test et lint
+          pip install pytest httpx ruff
+
+      - name: Lint (ruff)
+        run: ruff check src/ pipeline/ tests/
+
+      - name: Tests (pytest)
+        run: pytest -q

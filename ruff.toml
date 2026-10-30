@@ -1,0 +1,18 @@
+# Configuration ruff pour le projet MLOps impayes telecom
+# Regles selectionnees : erreurs de syntaxe (E), imports inutilises (F), warnings (W)
+# Voir https://docs.astral.sh/ruff/rules/
+
+line-length = 125
+
+extend-exclude = [
+    ".venv",
+    "mlartifacts",
+    "data",
+    "notebooks",
+    "models",
+    "logs",
+]
+
+[lint]
+select = ["E", "F", "W"]
+ignore = ["W292"]   # pas de nouvelle ligne obligatoire en fin de fichier

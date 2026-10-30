@@ -14,7 +14,8 @@ Trois "runs" sont enregistres dans MLflow :
 
 Isolation d'un CANDIDAT (utilisee par le flow CT, etape 7) : par defaut le script ecrit dans models/ et reports/
 (comportement inchange). Pour ne PAS toucher au modele valide :
-    python src/03_entrainement.py --modeles-dir models/candidats/20261030_1200 --reports-dir models/candidats/20261030_1200/reports
+    python src/03_entrainement.py --modeles-dir models/candidats/20261030_1200 \
+        --reports-dir models/candidats/20261030_1200/reports
 """
 import argparse
 import hashlib
