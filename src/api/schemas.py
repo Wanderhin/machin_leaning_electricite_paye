@@ -5,6 +5,10 @@ Deux niveaux de controle sur les entrees :
   - ERREUR 422 (valeur impossible) : negatif, score de coherence hors de [0, 1], operateur inconnu...
   - AVERTISSEMENT (valeur possible mais jamais vue a l'entrainement) : on repond quand meme, mais on
     previent. C'est un signal precoce de derive des donnees (utile pour le monitoring, etape 8).
+
+En production industrielle :
+  - extra="ignore" : si le systeme amont transmet l'ensemble des colonnes du SI (ex: credit_score,
+    phone_number), l'API filtre proprement et retient uniquement les variables comportementales utiles.
 """
 from typing import Literal, Optional
 
@@ -25,6 +29,7 @@ class ClientFeatures(BaseModel):
     """Caracteristiques de comportement d'UN client (jeu de variables « comportement »)."""
 
     model_config = ConfigDict(
+        extra="ignore",  # Tolere les colonnes brutes superflues (ex: phone_number, credit_score)
         json_schema_extra={"examples": [{
             "customer_id": "CUST1234567",
             "tenure_months": 36,
@@ -72,6 +77,16 @@ class Prediction(BaseModel):
     version_modele: str = Field(..., description="Identifiant du modele (hash du fichier = hash DVC)")
     avertissements: list[str] = Field(default_factory=list, description="Valeurs hors de la plage d'entrainement")
     latence_ms: float = Field(..., description="Temps de calcul de la prediction")
+
+
+class BatchPredictionRequest(BaseModel):
+    clients: list[ClientFeatures] = Field(..., max_length=5000, description="Liste des profils clients a scorer par lot")
+
+
+class BatchPredictionResponse(BaseModel):
+    predictions: list[Prediction]
+    total_clients: int
+    latence_totale_ms: float
 
 
 class ModelInfo(BaseModel):

@@ -99,6 +99,20 @@ def test_hors_plage_entrainement_accepte_avec_avertissement(client):
     assert any("avg_monthly_spend_ngn" in a for a in r.json()["avertissements"])
 
 
+def test_champs_bruts_superflus_ignores_sans_erreur(client):
+    """Envoie une ligne complete contenant des variables bancaires / PII hors perimetre."""
+    client_avec_extras = {
+        **CLIENT_OK,
+        "phone_number": "2348012345678",
+        "credit_score": 720,
+        "credit_rating": "good",
+        "assessment_date": "2025-01-15",
+    }
+    r = client.post("/predict", json=client_avec_extras)
+    assert r.status_code == 200
+    assert r.json()["classe_predite"] in CLASSES
+
+
 def test_journal_ecrit_et_id_client_hashe(client):
     client.post("/predict", json=CLIENT_OK)
     lignes = client.journal.read_text(encoding="utf-8").strip().splitlines()
@@ -106,6 +120,30 @@ def test_journal_ecrit_et_id_client_hashe(client):
     assert "CUST1234567" not in lignes[0]                       # jamais l'ID en clair
     d = json.loads(lignes[0])
     assert d["client_hash"] and d["entrees"]["operator"] == "MTN" and d["classe_predite"] in CLASSES
+
+
+def test_metrics_prometheus(client):
+    """Verifie que l'endpoint /metrics expose les metriques pour Prometheus."""
+    client.post("/predict", json=CLIENT_OK)
+    r = client.get("/metrics")
+    assert r.status_code == 200
+    texte = r.text
+    assert "model_predictions_total" in texte
+    assert "model_prediction_duration_seconds" in texte
+
+
+def test_predict_batch(client):
+    """Verifie le scoring par lot de clients."""
+    lot = [
+        CLIENT_OK,
+        {**CLIENT_OK, "customer_id": "CUST9999", "avg_monthly_spend_ngn": 35000.0, "late_payment_count": 0},
+    ]
+    r = client.post("/predict/batch", json={"clients": lot})
+    assert r.status_code == 200
+    d = r.json()
+    assert d["total_clients"] == 2
+    assert len(d["predictions"]) == 2
+    assert d["latence_totale_ms"] >= 0
 
 
 def test_poids_de_decision_appliques(tmp_path, monkeypatch):

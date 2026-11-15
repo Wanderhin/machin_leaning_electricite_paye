@@ -1,0 +1,32 @@
+[
+  {
+    "scenario": "Scenario B (Data Drift [SIMULE])",
+    "type": "DATA_DRIFT",
+    "severite": "CRITIQUE",
+    "message": "Data drift detecte sur 3 variable(s) (PSI max = 4.1095)."
+  },
+  {
+    "scenario": "Scenario B (Data Drift [SIMULE])",
+    "type": "CONCEPT_DRIFT_PERFORMANCE",
+    "severite": "WARNING",
+    "message": "F1-macro en baisse sensible (0.3883 < seuil 0.4400)."
+  },
+  {
+    "scenario": "Scenario C (Concept Drift [SIMULE])",
+    "type": "CONCEPT_DRIFT_PERFORMANCE",
+    "severite": "CRITIQUE",
+    "message": "Chute critique du F1-macro (0.3740 < seuil 0.3800)."
+  },
+  {
+    "scenario": "Scenario C (Concept Drift [SIMULE])",
+    "type": "RECOUVREMENT_RISQUE",
+    "severite": "CRITIQUE",
+    "message": "Rappel classe high insuffisant (0.4237 < 0.4500) : impayes non detectes."
+  },
+  {
+    "scenario": "Scenario D (Incident Infra [SIMULE])",
+    "type": "INFRASTRUCTURE_LATENCE",
+    "severite": "CRITIQUE",
+    "message": "Latence anormale du service (880.0 ms > seuil 300 ms). Incident R10."
+  }
+]
