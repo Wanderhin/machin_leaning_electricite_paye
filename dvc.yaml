@@ -56,7 +56,8 @@ stages:
       - data/processed/val.csv
       - data/processed/test.csv
     outs:
-      - models/model_final.joblib
+      - models/model_final.joblib:
+          cache: false
       - models/decision_poids.json:
           cache: false
       - reports/04_matrice_confusion_test.png:
