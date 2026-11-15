@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Rapport de Conception & Industrialisation MLOps - Telecom Nigeria</title>
+    <style>
+        @media print {
+            body { font-size: 11pt; }
+            .no-print { display: none; }
+            .page-break { page-break-before: always; }
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #24292e;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 30px;
+        }
+        .container {
+            max-width: 1050px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 45px 55px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        .header {
+            border-bottom: 3px solid #1a365d;
+            padding-bottom: 20px;
+            margin-bottom: 35px;
+        }
+        .header h1 {
+            color: #1a365d;
+            margin: 0 0 10px 0;
+            font-size: 26px;
+        }
+        .header-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #4a5568;
+            font-weight: 500;
+        }
+        h2 {
+            color: #2b6cb0;
+            border-bottom: 1.5px solid #e2e8f0;
+            padding-bottom: 8px;
+            margin-top: 40px;
+            font-size: 20px;
+        }
+        h3 {
+            color: #2d3748;
+            margin-top: 25px;
+            font-size: 16px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 13px;
+        }
+        th, td {
+            border: 1px solid #cbd5e0;
+            padding: 10px 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #ebf8ff;
+            color: #2c5282;
+            font-weight: 600;
+        }
+        tr:nth-child(even) { background-color: #f7fafc; }
+        .badge-conforme {
+            background-color: #c6f6d5;
+            color: #22543d;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 11px;
+            display: inline-block;
+        }
+        .badge-critique {
+            background-color: #fed7d7;
+            color: #742a2a;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 11px;
+            display: inline-block;
+        }
+        .badge-ok {
+            background-color: #c6f6d5;
+            color: #22543d;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 11px;
+            display: inline-block;
+        }
+        .alert-box {
+            background-color: #edf2f7;
+            border-left: 4px solid #3182ce;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+            font-size: 13.5px;
+        }
+        pre {
+            background: #2d3748;
+            color: #edf2f7;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        code {
+            background: #edf2f7;
+            color: #c53030;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: Consolas, monospace;
+            font-size: 12px;
+        }
+        pre code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
+        }
+        .footer {
+            margin-top: 50px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 15px;
+            text-align: center;
+            font-size: 12px;
+            color: #718096;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>RAPPORT DE CONCEPTION & INDUSTRIALISATION MLOPS</h1>
+        <div style="font-size: 16px; font-weight: bold; color: #4a5568; margin-bottom: 12px;">
+            Prédiction du Risque d'Impayés Télécom (Nigeria) — Modélisation des Données & MLOps
+        </div>
+        <div class="header-meta">
+            <span><b>Établissement :</b> 3IL Ingénieurs (Cti) — 3IL 4 : EADL / JA</span>
+            <span><b>Matière :</b> Machine Learning & MLOps</span>
+            <span><b>Enseignant :</b> Dr KUATE Alain François</span>
+            <span><b>Barème :</b> /80 points</span>
+        </div>
+    </div>
+
+    <div class="alert-box">
+        <b>Synthèse de cadrage :</b> Ce dossier d'ingénierie couvre l'ensemble des exigences de la <b>Partie II</b> de l'examen : la résolution justifiée du QCM (15 pts), les questions de développement Q6-Q8 (20 pts), et le dossier d'architecture cible de l'Exercice Pratique de Conception (25 pts), accompagné de la matrice de conformité des 9 livrables techniques.
+    </div>
+
+    <h2>1. PARTIE II — QCM D'ÉVALUATION (15 points)</h2>
+    
+    <h3>Q1. Séquence correcte des étapes en production</h3>
+    <p><b>Réponse : B. Ingestion des données &rarr; Entraînement du modèle &rarr; Déploiement &rarr; Monitoring</b></p>
+    <p><i>Justification :</i> La chaîne de valeur canonique débute par la collecte et l'ingestion des flux de données validées, suivies par la phase d'entraînement et d'évaluation, puis par le serving de l'inférence. Le monitoring intervient en aval pour observer le comportement réel et piloter le réentraînement continu.</p>
+
+    <h3>Q2. Artefacts supplémentaires versionnés par le MLOps</h3>
+    <p><b>Réponse : B. Les données d'entraînement et les artefacts de modèle</b></p>
+    <p><i>Justification :</i> En ingénierie logicielle classique, le code seul produit le binaire. En apprentissage automatique, le binaire est le produit indissociable du code et des données. Le MLOps exige le versioning rigoureux des jeux de données (DVC) et des modèles sérialisés (MLflow Model Registry).</p>
+
+    <h3>Q3. Pratique garantissant le plus directement la reproductibilité</h3>
+    <p><b>Réponse : C. Fixer les graines aléatoires, la version des données, le commit de code et les dépendances</b></p>
+    <p><i>Justification :</i> La reproductibilité scientifique et réglementaire n'est assurée que si le quadruplet {commit Git, hash des données DVC, environnement scellé, graine pseudo-aléatoire seed=42} est figé de bout en bout.</p>
+
+    <h3>Q4. Rôle des quatre couches « logs, métriques, traces, alertes »</h3>
+    <p><b>Réponse : B. À assurer l'observabilité technique et comportementale du système en production</b></p>
+    <p><i>Justification :</i> Les logs enregistrent l'historique d'inférence avec pseudonymisation, les métriques suivent la latence et le PSI, les traces décomposent les goulots d'étranglement microservices, et les alertes automatisent l'escalade vers les équipes d'astreinte.</p>
+
+    <h3>Q5. Objectif principal du Model Registry (registre de modèles)</h3>
+    <p><b>Réponse : B. Gérer les versions des modèles, leur statut (staging/production) et les métadonnées associées</b></p>
+    <p><i>Justification :</i> Le registre centralise les artefacts sérialisés, trace leur lignage (paramètres, matrice de confusion) et sépare le candidat validé (Staging / Challenger) du service actif (Production / Champion).</p>
+
+    <div class="page-break"></div>
+
+    <h2>2. PARTIE II — QUESTIONS À DÉVELOPPEMENT (20 points)</h2>
+
+    <h3>Q6. Composants essentiels d'un pipeline MLOps industriel (8 pts)</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Composant</th>
+                <th>Rôle dans le Projet Télécom</th>
+                <th>Technologie Recommandée</th>
+                <th>Justification Technique</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><b>1. Ingestion & Versioning</b></td>
+                <td>Collecte des 500 000 profils télécom et traçabilité</td>
+                <td>DVC + Stockage S3 / MinIO</td>
+                <td>Versionne les volumes sans alourdir le dépôt Git. Empreinte MD5 immuable pour chaque split (train/val/test).</td>
+            </tr>
+            <tr>
+                <td><b>2. Validation Données</b></td>
+                <td>Contrôle de schéma et détection de valeurs corrompues</td>
+                <td>Great Expectations / Pandera</td>
+                <td>Empêche l'entraînement sur des données polluées ; stoppe immédiatement le pipeline en cas d'anomalie de type.</td>
+            </tr>
+            <tr>
+                <td><b>3. Entraînement & Suivi</b></td>
+                <td>Optimisation des hyperparamètres XGBoost et tracking</td>
+                <td>MLflow Tracking + Scikit-Learn</td>
+                <td>Consigne automatiquement les paramètres, courbes d'apprentissage, matrices de confusion et F1-scores.</td>
+            </tr>
+            <tr>
+                <td><b>4. Registre de Modèles</b></td>
+                <td>Gouvernance des versions et promotion</td>
+                <td>MLflow Model Registry</td>
+                <td>Sépare le modèle en service (Champion) du candidat évalué (Challenger) via des tags Staging / Production.</td>
+            </tr>
+            <tr>
+                <td><b>5. Serving & Packaging</b></td>
+                <td>Inférence en ligne (REST) et scoring de lot (Batch)</td>
+                <td>FastAPI + Docker (Linux slim)</td>
+                <td>Latence p95 &lt; 80 ms, validation Pydantic stricte, endpoints /predict, /predict/batch, /health et /metrics.</td>
+            </tr>
+            <tr>
+                <td><b>6. Orchestration CT</b></td>
+                <td>Gestion du DAG d'entraînement continu</td>
+                <td>Prefect / GitHub Actions</td>
+                <td>Orchestre les dépendances de tâches, gère les reprises sur incident et conditionne le packaging.</td>
+            </tr>
+            <tr>
+                <td><b>7. Monitoring & Dérive</b></td>
+                <td>Surveillance des flux d'inférence et des impayés</td>
+                <td>Evidently 0.7.23 + Prometheus</td>
+                <td>Calcul du Population Stability Index (PSI bancaire) et détection des dérives statistiques de population.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Q7. Data Drift vs Concept Drift dans le scoring télécom (6 pts)</h3>
+    <div class="alert-box">
+        <b>Formulation formelle :</b> Le <i>Data Drift</i> correspond à la dérive des distributions d'entrée \(P(X)\) à relation \(P(Y|X)\) constante. Le <i>Concept Drift</i> désigne la rupture de la relation fonctionnelle \(P(Y|X)\), avec ou sans dérive de \(P(X)\).
+    </div>
+    <ul>
+        <li><b>Data Drift (Exemple Télécom) :</b> Une inflation forte au Nigeria entraîne une augmentation brutale des dépenses moyennes (<code>avg_monthly_spend_ngn</code> &times; 1.6) et une raréfaction des recharges. Le profil d'entrée a dérivé, mais les clients dépensiers restent solvables. Détectable en temps réel à l'inférence via le <b>PSI</b> et le test <b>KS</b> sans attendre les étiquettes.</li>
+        <li><b>Concept Drift (Exemple Télécom) :</b> Une crise de liquidité bancaire frappe le pays. Des clients ayant un comportement d'usage exemplaire (<code>late_payment_count = 0</code>, régularité élevée) cessent subitement d'honorer leurs factures. Les variables d'entrée restent parfaitement stables, mais le risque d'impayé explose. Détectable uniquement lorsque les étiquettes de remboursement réelles remontent à J+30 (chute brutale du <b>F1-score</b> et du <b>rappel de la classe high</b>).</li>
+    </ul>
+
+    <h3>Q8. Stratégie de redéploiement sécurisée, Canari et Rollback (6 pts)</h3>
+    <p>Le déploiement d'une nouvelle version de modèle applique une progression stricte en 3 phases :</p>
+    <ol>
+        <li><b>Mode Miroir (Shadow Deployment) :</b> Le nouveau modèle (Challenger) reçoit une copie en direct des requêtes sans impacter les clients. Cette étape valide la latence, la stabilité mémoire et l'absence de crash.</li>
+        <li><b>Déploiement Canari (Canary Deployment) :</b> L'Ingress Controller achemine <b>5% du trafic</b> vers le conteneur Challenger et 95% vers le Champion. L'observabilité Prometheus vérifie l'absence d'erreurs 5xx et la tenue de la latence (&lt; 150 ms). Le trafic passe progressivement à 20%, 50%, puis 100%.</li>
+        <li><b>Critères d'automatisation du Rollback :</b> Le retour immédiat au modèle précédent est déclenché sans délai si :
+            <ul>
+                <li>La latence p95 dépasse <b>300 ms</b> pendant plus de 3 minutes consécutives.</li>
+                <li>Le taux d'erreurs HTTP 5xx dépasse <b>0,5%</b> des requêtes.</li>
+                <li>La part des prédictions de classe <code>high</code> dépasse <b>60%</b> (signal d'incompatibilité de schéma).</li>
+            </ul>
+        </li>
+    </ol>
+
+    <div class="page-break"></div>
+
+    <h2>3. EXERCICE PRATIQUE DE CONCEPTION D'ARCHITECTURE CIBLE (25 points)</h2>
+
+    <h3>i. Schéma d'Architecture Cible & Flux de Données (8 pts)</h3>
+    <pre>
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                ARCHITECTURE MLOPS CIBLE DE PRODUCTION                                  │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+ [1. INGESTION & DATA LAKE]
+     Sources Télécom (Factures, CDR, Recharges) ──> Validation Pandera ──> DVC Storage (S3 Immuable)
+                                                                                  │
+ [2. ENTRAÎNEMENT CONTINU & REPRODUCTIBILITÉ (CT)]                                │
+     Pipeline Feature Engineering ────────────────────────────────────────────────┘
+           │
+           ├──> Entraînement Candidat (XGBoost seed=42) ──> Tracking Expériences MLflow
+           │
+           └──> Porte de Qualité Automatique (05_porte_qualite.py)
+                     │  • F1-macro(Challenger) >= F1-macro(Champion)
+                     │  • Rappel(Classe 'High') >= 0.50
+                     ├── Si Échec  ──> Rejet, archivage et notification Slack
+                     └── Si Succès ──> Enregistrement MLflow Model Registry (Tag: Staging)
+                                            │
+ [3. SERVING REST & CONTENEURISATION (CD)]  │
+     Workflow GitHub Actions CI/CD <────────┘
+           │  • Tests unitaires (pytest) & Linting (ruff)
+           │  • Build Dockerfile (python:3.12-slim, non-root, xgboost-cpu)
+           │  • Publication automatique sur GHCR (ghcr.io) & Docker Hub
+           ▼
+     API Serving Conteneurisée (FastAPI / Kubernetes)
+           ├── /predict        : Inférence unitaire en temps réel (&lt; 75 ms)
+           ├── /predict/batch  : Scoring de portefeuilles en lot
+           ├── /health         : Sonde de vivacité pour l'orchestrateur
+           └── /metrics        : Observabilité Prometheus native
+                     │
+ [4. OBSERVABILITÉ 4 COUCHES & FEEDBACK LOOP]
+     API Serving ────┬──> Logs JSONL structurés (ID client hashé SHA-256) ──> Elasticsearch
+                     ├──> Métriques Prometheus ──> Dashboards Grafana
+                     └──> Surveillance Evidently & PSI (06_monitoring.py)
+                               │
+                               └──> Alerte Dérive / Perf à J+30 ──> Examen Humain ──> Déclenchement CT
+    </pre>
+
+    <h3>ii. Architecture du Pipeline CI / CD / CT (6 pts)</h3>
+    <ul>
+        <li><b>Pipeline CI (Intégration Continue) :</b> Déclenché sur chaque Pull Request et push sur <code>master</code>. Installe l'environnement, exécute le linter <code>ruff check</code> (0 avertissement) et lance les 25 tests unitaires automatisés (API, Pydantic, prétraitement, fonctions de calcul de PSI).</li>
+        <li><b>Pipeline CD (Déploiement Continu) :</b> Après validation des tests CI, GitHub Actions compile l'image Docker, exécute un <i>Smoke Test</i> en lançant le conteneur en arrière-plan pour sonder <code>/health</code> et <code>/metrics</code>, puis pousse l'artefact sur GitHub Container Registry (<code>ghcr.io</code>) et Docker Hub.</li>
+        <li><b>Pipeline CT (Entraînement Continu) :</b> Déclenché par la consolidation des étiquettes à J+30 ou de manière planifiée chaque mois. Entraîne un modèle Challenger dans un espace isolé, le soumet à la Porte de Qualité mathématique, et le référence dans MLflow.</li>
+    </ul>
+
+    <h3>iii. Plan de Monitoring, Observabilité 4 Couches & Alertes (6 pts)</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Scénario Évalué [D12]</th>
+                <th>Nature du Scénario</th>
+                <th>Statut Global</th>
+                <th>F1-Score Macro</th>
+                <th>Rappel Classe High</th>
+                <th>Latence d'Inférence</th>
+                <th>Dérive Constatée</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><b>Scénario A</b></td>
+                <td>Nominal (Témoin réel)</td>
+                <td><span class="badge-ok">OK</span></td>
+                <td>0.4550</td>
+                <td>0.5120</td>
+                <td>72.0 ms</td>
+                <td>Aucune dérive (PSI &lt; 0.05 sur toutes variables)</td>
+            </tr>
+            <tr>
+                <td><b>Scénario B</b></td>
+                <td>Data Drift [SIMULÉ]</td>
+                <td><span class="badge-critique">CRITIQUE</span></td>
+                <td>0.3883</td>
+                <td>0.4410</td>
+                <td>75.0 ms</td>
+                <td>Dérive majeure sur dépenses et recharges (PSI &gt; 0.25)</td>
+            </tr>
+            <tr>
+                <td><b>Scénario C</b></td>
+                <td>Concept Drift [SIMULÉ]</td>
+                <td><span class="badge-critique">CRITIQUE</span></td>
+                <td>0.3740</td>
+                <td>0.3820</td>
+                <td>74.0 ms</td>
+                <td>Chute de performance sans modification des entrées</td>
+            </tr>
+            <tr>
+                <td><b>Scénario D</b></td>
+                <td>Incident Infra [SIMULÉ]</td>
+                <td><span class="badge-critique">CRITIQUE</span></td>
+                <td>0.4550</td>
+                <td>0.5120</td>
+                <td>880.0 ms</td>
+                <td>Violation du SLA de latence (&gt; 300 ms - Cas R10)</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="alert-box">
+        <b>Règle d'or de la question R10.3 :</b> On ne remplace <b>JAMAIS</b> automatiquement le modèle à la première alerte de Data Drift car : (1) Une dérive des entrées n'implique pas obligatoirement une défaillance de prédiction ; (2) Réentraîner sans étiquettes consolidées risque de figer des données polluées ; (3) L'anomalie peut résulter d'un incident transitoire ou d'un problème d'infrastructure (comme dans le scénario D à 880 ms). Une analyse humaine est obligatoire avant toute promotion.
+    </div>
+
+    <h3>iv. Gestion du Cycle de Vie, Gouvernance & Auditabilité (5 pts)</h3>
+    <ul>
+        <li><b>Traçabilité Intégrale :</b> Chaque prédiction est traçable jusqu'au commit Git du code, au hash MD5 des données d'entraînement DVC, et à la version du conteneur Docker.</li>
+        <li><b>Conformité NDPR (Nigeria Data Protection Regulation) / RGPD :</b>
+            <ul>
+                <li>La colonne <code>phone_number</code> présente dans les données brutes est systématiquement éliminée dès l'audit pour proscrire toute PII (donnée personnelle identifiable).</li>
+                <li>L'identifiant <code>customer_id</code> est pseudonymisé à la volée par hachage cryptographique non réversible : <code>SHA256(customer_id)[:16]</code>.</li>
+            </ul>
+        </li>
+        <li><b>Défendabilité des Décisions :</b> L'utilisation d'arbres de décision XGBoost avec valeurs de Shapley (SHAP) permet de justifier auprès du régulateur financier nigérian les motifs précis d'un refus de crédit.</li>
+    </ul>
+
+    <div class="page-break"></div>
+
+    <h2>4. MATRICE DE CONFORMITÉ DES 9 LIVRABLES TECHNIQUES DU SUJET</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>N°</th>
+                <th>Livrable Exigé par le Sujet</th>
+                <th>Artefact Produit dans le Projet</th>
+                <th>Statut</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><b>1</b></td>
+                <td><b>Dépôt Git structuré</b></td>
+                <td>Code source modulaire sous <code>src/</code>, tests sous <code>tests/</code>, configuration Ruff</td>
+                <td><span class="badge-conforme">CONFORME</span></td>
+            </tr>
+            <tr>
+                <td><b>2</b></td>
+                <td><b>Données versionnées</b></td>
+                <td>Pipeline reproductible DVC (<code>dvc.yaml</code>, <code>dvc.lock</code>) avec splits tracés</td>
+                <td><span class="badge-conforme">CONFORME</span></td>
+            </tr>
+            <tr>
+                <td><b>3</b></td>
+                <td><b>Modèle entraîné & évalué</b></td>
+                <td>Modèle sérialisé <code>models/model_final.joblib</code>, métriques de test et matrice</td>
+                <td><span class="badge-conforme">CONFORME</span></td>
+            </tr>
+            <tr>
+                <td><b>4</b></td>
+                <td><b>API de serving</b></td>
+                <td>FastAPI haute disponibilité avec <code>/predict</code>, <code>/predict/batch</code>, <code>/metrics</code> et Swagger</td>
+                <td><span class="badge-conforme">CONFORME</span></td>
+            </tr>
+            <tr>
+                <td><b>5</b></td>
+                <td><b>Image Docker déployable</b></td>
+                <td>Conteneur léger <code>python:3.12-slim</code> avec utilisateur non-root et <code>xgboost-cpu</code></td>
+                <td><span class="badge-conforme">CONFORME</span></td>
+            </tr>
+            <tr>
+                <td><b>6</b></td>
+                <td><b>Pipeline automatisé CI/CD/CT</b></td>
+                <td>GitHub Actions (CI qualité/tests + CD build/smoke-test/GHCR) & flow Prefect</td>
+                <td><span class="badge-conforme">CONFORME</span></td>
+            </tr>
+            <tr>
+                <td><b>7</b></td>
+                <td><b>Registre de modèles</b></td>
+                <td>MLflow Model Registry avec séparation d'état (Staging, Production, Challenger)</td>
+                <td><span class="badge-conforme">CONFORME</span></td>
+            </tr>
+            <tr>
+                <td><b>8</b></td>
+                <td><b>Dashboard de monitoring</b></td>
+                <td>Observabilité 4 couches : métriques Prometheus, dashboard HTML et rapport Evidently</td>
+                <td><span class="badge-conforme">CONFORME</span></td>
+            </tr>
+            <tr>
+                <td><b>9</b></td>
+                <td><b>Rapport de conception</b></td>
+                <td>Dossier de conception d'architecture cible complet (architecture, CI/CD/CT, gouvernance)</td>
+                <td><span class="badge-conforme">CONFORME</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="footer">
+        Projet d'Examen MLOps & Modélisation des Données — Cycle Ingénieur Informatique 3IL 4 (Session Normale 2026-2027)<br>
+        Rapport généré conformément aux directives pédagogiques et aux normes d'ingénierie logicielle.
+    </div>
+</div>
+
+</body>
+</html>
