@@ -75,6 +75,45 @@ WARNINGS_COUNTER = Counter(
     ["champ"],
 )
 
+SIGNIFICATIONS_METIER = {
+    "low": {
+        "description": "Risque d'impaye faible (client solvable et regulier).",
+        "recommandation": "Accorder le credit telecom ou l'avance de forfait sans restriction.",
+    },
+    "medium": {
+        "description": "Risque d'impaye modere (profil necessitant une surveillance).",
+        "recommandation": "Accorder un credit plafonne et envoyer des rappels de paiement preventifs.",
+    },
+    "high": {
+        "description": "Risque d'impaye eleve (forte probabilite de defaut de paiement).",
+        "recommandation": "Refuser le credit en postpaye ou exiger un rechargement prepaye integral.",
+    },
+}
+
+
+def extraire_motifs(c: ClientFeatures) -> list[str]:
+    """Extrait les facteurs cles d'explicabilite (XAI) pour la decision."""
+    motifs = []
+    if c.late_payment_count >= 3:
+        motifs.append(f"Nombre eleve d'antecedents de retards ({c.late_payment_count} retards)")
+    elif c.late_payment_count == 0:
+        motifs.append("Aucun retard de paiement passe (historique propre)")
+
+    if c.payment_consistency_score < 0.40:
+        motifs.append(f"Faible regularite des reglements (score: {c.payment_consistency_score:.2f}/1.0)")
+    elif c.payment_consistency_score > 0.70:
+        motifs.append(f"Bonne regularite des reglements (score: {c.payment_consistency_score:.2f}/1.0)")
+
+    if c.tenure_months < 6:
+        motifs.append(f"Client recent dans le reseau ({c.tenure_months} mois d'anciennete)")
+    elif c.tenure_months >= 24:
+        motifs.append(f"Client fidele ({c.tenure_months} mois d'anciennete)")
+
+    if c.account_type == "postpaid" and c.late_payment_count >= 2:
+        motifs.append("Compte postpaye avec retards repetes (risque d'accumulation de dette)")
+
+    return motifs
+
 
 def md5_fichier(chemin):
     h = hashlib.md5()
@@ -203,8 +242,17 @@ def predict(client: ClientFeatures, request: Request):
     avert = avertissements(client)
     ecrire_journal(request.app, client, classe, scores, latence_ms, avert)
 
+    info_metier = SIGNIFICATIONS_METIER.get(classe, {
+        "description": f"Risque evalue a {classe}",
+        "recommandation": "Se conformer aux regles de gestion du risque de l'operateur.",
+    })
+    motifs = extraire_motifs(client)
+
     return Prediction(
         classe_predite=classe,
+        description_risque=info_metier["description"],
+        decision_recommandee=info_metier["recommandation"],
+        motifs_principaux=motifs,
         scores=scores,
         version_modele=s.version,
         avertissements=avert,
@@ -235,8 +283,16 @@ def predict_batch(batch: BatchPredictionRequest, request: Request):
         scores = {cl: round(float(p), 4) for cl, p in zip(s.classes, probas[i])}
         avert = avertissements(c)
         PREDICTIONS_COUNTER.labels(classe_predite=classe, version_modele=s.version).inc()
+        info_metier = SIGNIFICATIONS_METIER.get(classe, {
+            "description": f"Risque evalue a {classe}",
+            "recommandation": "Se conformer aux regles de gestion du risque de l'operateur.",
+        })
+        motifs = extraire_motifs(c)
         pred = Prediction(
             classe_predite=classe,
+            description_risque=info_metier["description"],
+            decision_recommandee=info_metier["recommandation"],
+            motifs_principaux=motifs,
             scores=scores,
             version_modele=s.version,
             avertissements=avert,

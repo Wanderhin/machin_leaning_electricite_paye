@@ -70,6 +70,12 @@ class ClientFeatures(BaseModel):
 class Prediction(BaseModel):
     classe_predite: Literal["low", "medium", "high"] = Field(
         ..., description="Niveau de risque d'impaye retenu apres application des poids de decision")
+    description_risque: str = Field(
+        ..., description="Explication metier claire et comprehensible du niveau de risque")
+    decision_recommandee: str = Field(
+        ..., description="Action recommandee pour l'operateur telecom (octroi, seuil ou refus)")
+    motifs_principaux: list[str] = Field(
+        default_factory=list, description="Facteurs comportementaux cles ayant motive cette classification")
     scores: dict[str, float] = Field(
         ..., description="Scores du modele par classe (somme = 1). ATTENTION : ce ne sont PAS des probabilites "
                          "calibrees (le modele est entraine avec des poids de classes) : a utiliser pour classer, "
