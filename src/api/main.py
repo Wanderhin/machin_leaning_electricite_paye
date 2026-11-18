@@ -33,15 +33,26 @@ import joblib
 import numpy as np
 import pandas as pd
 
-from .schemas import (
-    PLAGES_ENTRAINEMENT,
-    BatchPredictionRequest,
-    BatchPredictionResponse,
-    ClientFeatures,
-    Health,
-    ModelInfo,
-    Prediction,
-)
+try:
+    from src.api.schemas import (
+        BatchPredictionRequest,
+        BatchPredictionResponse,
+        ClientFeatures,
+        Health,
+        ModelInfo,
+        PLAGES_ENTRAINEMENT,
+        Prediction,
+    )
+except ModuleNotFoundError:
+    from schemas import (
+        BatchPredictionRequest,
+        BatchPredictionResponse,
+        ClientFeatures,
+        Health,
+        ModelInfo,
+        PLAGES_ENTRAINEMENT,
+        Prediction,
+    )
 
 ROOT = Path(__file__).resolve().parents[2]
 JEU_ATTENDU = "comportement"
@@ -309,3 +320,15 @@ def predict_batch(batch: BatchPredictionRequest, request: Request):
         total_clients=len(predictions),
         latence_totale_ms=round(latence_totale_ms, 3),
     )
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    print("=" * 70)
+    print("DEMARRAGE DU SERVEUR D'API FASTAPI")
+    print("Documentation Swagger : http://127.0.0.1:8000/docs")
+    print("Metriques Prometheus  : http://127.0.0.1:8000/metrics")
+    print("Sante du service      : http://127.0.0.1:8000/health")
+    print("=" * 70)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
