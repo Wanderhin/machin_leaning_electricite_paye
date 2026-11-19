@@ -27,6 +27,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 from starlette.responses import Response
 import joblib
@@ -322,12 +323,36 @@ def predict_batch(batch: BatchPredictionRequest, request: Request):
     )
 
 
+@app.get("/dashboard", summary="Tableau de bord HTML d'observabilite et de monitoring", include_in_schema=True)
+def afficher_dashboard():
+    chemin = ROOT / "reports" / "monitoring" / "dashboard_monitoring.html"
+    if not chemin.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="Dashboard introuvable. Executez d'abord 'python src/06_monitoring.py' pour le generer.",
+        )
+    return FileResponse(chemin)
+
+
+@app.get("/drift", summary="Rapport d'analyse de Data Drift Evidently", include_in_schema=True)
+def afficher_drift():
+    chemin = ROOT / "reports" / "monitoring" / "data_drift_report.html"
+    if not chemin.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="Rapport drift introuvable. Executez d'abord 'python src/06_monitoring.py' pour le generer.",
+        )
+    return FileResponse(chemin)
+
+
 if __name__ == "__main__":
     import uvicorn
 
     print("=" * 70)
     print("DEMARRAGE DU SERVEUR D'API FASTAPI")
     print("Documentation Swagger : http://127.0.0.1:8000/docs")
+    print("Dashboard Monitoring : http://127.0.0.1:8000/dashboard")
+    print("Rapport Data Drift    : http://127.0.0.1:8000/drift")
     print("Metriques Prometheus  : http://127.0.0.1:8000/metrics")
     print("Sante du service      : http://127.0.0.1:8000/health")
     print("=" * 70)

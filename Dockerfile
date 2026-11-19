@@ -32,7 +32,7 @@ RUN useradd --create-home --uid 1000 appuser
 # Code de l'API et artefacts de modele (pas de donnees, pas de secrets : voir .dockerignore).
 COPY src/ ./src/
 COPY models/model_final.joblib models/decision_poids.json ./models/
-COPY reports/04_evaluation_test.json ./reports/
+COPY reports/ ./reports/
 
 RUN mkdir -p /app/logs && chown -R appuser:appuser /app
 USER appuser

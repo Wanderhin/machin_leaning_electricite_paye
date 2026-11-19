@@ -31,6 +31,8 @@ models/*
 !models/model_final.joblib
 !models/decision_poids.json
 
-# Rapports : on ne garde que l'evaluation du test
+# Rapports inclus dans l'image (evaluation et monitoring)
 reports/*
 !reports/04_evaluation_test.json
+!reports/monitoring/
+!reports/monitoring/*

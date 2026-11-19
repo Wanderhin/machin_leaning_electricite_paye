@@ -250,117 +250,241 @@ def generer_rapport_evidently(df_ref: pd.DataFrame, df_cur: pd.DataFrame, output
 
 
 def generer_dashboard_html(resultats_scenarios: list, output_path: Path):
-    """Genere un dashboard HTML d'observabilite moderne et autonome."""
-    badge_color = {"OK": "#28a745", "AVERTISSEMENT": "#ffc107", "CRITIQUE": "#dc3545"}
+    """Genere un rapport HTML de surveillance, autonome (aucune ressource externe)."""
+    from collections import Counter
+    from datetime import datetime
+    from html import escape as esc
 
-    rows_html = ""
-    for s in resultats_scenarios:
-        color = badge_color.get(s["statut_global"], "#6c757d")
-        text_color = "#000" if s["statut_global"] == "AVERTISSEMENT" else "#fff"
-        if s["alertes"]:
-            alertes_str = "<br>".join([f"&bull; <b>[{a['severite']}]</b> {a['message']}" for a in s["alertes"]])
-        else:
-            alertes_str = "<i>Aucune alerte (nominal)</i>"
+    # --- Seuils de reference (affiches et utilises pour la mise en forme) ---
+    PSI_STABLE, PSI_ALERTE = 0.10, 0.20
+    F1_NOMINAL, F1_CRITIQUE = 0.44, 0.38
+    LAT_NORMALE_MS, LAT_ALERTE_MS = 150, 300
 
-        psi_resume = ", ".join([f"{k}: {v}" for k, v in s["psi_par_feature"].items() if v >= 0.10])
-        if not psi_resume:
-            psi_resume = "Toutes variables stables (PSI < 0.10)"
+    STATUTS = {
+        "OK": ("ok", "Nominal"),
+        "AVERTISSEMENT": ("warn", "Avertissement"),
+        "CRITIQUE": ("crit", "Critique"),
+    }
 
-        badge_span = (
-            f'<span style="background-color:{color}; color:{text_color}; '
-            f'padding:6px 12px; border-radius:12px; font-weight:bold;">{s["statut_global"]}</span>'
-        )
+    css = """
+:root {
+  --ink: #1b2430; --muted: #5d6877; --rule: #d5dae1; --rule-soft: #e8ebef;
+  --paper: #ffffff; --page: #f3f4f6; --brand: #17375e;
+  --ok: #1f7a46; --warn: #a8690a; --crit: #b3261e;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--page); color: var(--ink);
+  font: 14px/1.5 "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+.page {
+  max-width: 1180px; margin: 32px auto; background: var(--paper);
+  border: 1px solid var(--rule); border-top: 4px solid var(--brand);
+  padding: 40px 48px 32px;
+}
+header { padding-bottom: 24px; border-bottom: 1px solid var(--rule); }
+h1 { margin: 0 0 4px; font-size: 24px; font-weight: 600; letter-spacing: -0.01em; color: var(--brand); }
+.subtitle { margin: 0; color: var(--muted); font-size: 15px; }
+dl.meta { display: grid; grid-template-columns: repeat(4, auto); gap: 4px 40px; margin: 22px 0 0; justify-content: start; }
+dl.meta dt { color: var(--muted); font-size: 12px; }
+dl.meta dd { margin: 0 0 6px; font-weight: 600; }
+h2 { margin: 36px 0 12px; font-size: 16px; font-weight: 600; color: var(--brand); }
+p.lead { margin: 0 0 4px; max-width: 76ch; }
+.count { white-space: nowrap; }
+.count::before, .tag::before {
+  content: ""; display: inline-block; width: 9px; height: 9px; margin-right: 6px;
+  background: var(--c, var(--muted));
+}
+.ok { --c: var(--ok); } .warn { --c: var(--warn); } .crit { --c: var(--crit); }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 10px 12px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--rule-soft); }
+thead th { font-weight: 600; font-size: 13px; border-bottom: 2px solid var(--ink); white-space: nowrap; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.thresholds { max-width: 760px; }
+table.thresholds td:first-child { font-weight: 600; }
+table.scenarios tbody tr { border-left: 4px solid var(--c, transparent); }
+table.scenarios tbody tr:last-child td { border-bottom: 1px solid var(--rule); }
+.name { font-weight: 600; }
+.desc { color: var(--muted); font-size: 13px; }
+.tag { font-weight: 600; white-space: nowrap; color: var(--c); }
+td.num.warn { color: var(--warn); font-weight: 600; }
+td.num.crit { color: var(--crit); font-weight: 600; }
+ul.alerts { margin: 0; padding: 0; list-style: none; font-size: 13px; }
+ul.alerts li { margin: 0 0 4px; }
+ul.alerts .sev { font-weight: 600; color: var(--c, var(--ink)); }
+.psi { display: block; font-size: 13px; font-variant-numeric: tabular-nums; }
+.psi b { font-weight: 600; }
+.psi.warn b { color: var(--warn); } .psi.crit b { color: var(--crit); }
+.muted { color: var(--muted); }
+.notes { margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--rule); font-size: 13px; color: var(--muted); max-width: 90ch; }
+.notes p { margin: 0 0 8px; }
+.notes b { color: var(--ink); font-weight: 600; }
+@media (max-width: 760px) {
+  .page { margin: 0; padding: 24px 18px; border-left: 0; border-right: 0; }
+  dl.meta { grid-template-columns: repeat(2, auto); }
+}
+@media print {
+  body { background: #fff; }
+  .page { margin: 0; border: 0; border-top: 4px solid var(--brand); padding: 0; max-width: none; }
+  tr { break-inside: avoid; }
+}
+"""
 
-        rows_html += f"""
-        <tr>
-            <td><b>{s['scenario']}</b><br><small style="color:#666">{s['description']}</small></td>
-            <td style="text-align:center;">{badge_span}</td>
-            <td>{s['f1_macro']}</td>
-            <td>{s['recall_high']}</td>
-            <td>{s['latence_moyenne_ms']} ms</td>
-            <td><small>{psi_resume}</small></td>
-            <td><small>{alertes_str}</small></td>
-        </tr>
-        """
-
-    html = f"""<!DOCTYPE html>
+    template = """<!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Tableau de Bord de Monitoring MLOps - Credit Scoring Telecom</title>
-    <style>
-        body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 30px; background-color: #f8f9fa; color: #212529;
-        }}
-        .container {{
-            max-width: 1200px; margin: auto; background: white; padding: 30px;
-            border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }}
-        h1 {{ color: #1e3d59; border-bottom: 2px solid #1e3d59; padding-bottom: 10px; }}
-        .summary-box {{ display: flex; gap: 20px; margin: 25px 0; }}
-        .card {{ flex: 1; padding: 20px; border-radius: 6px; background: #f1f4f9; border-left: 5px solid #1e3d59; }}
-        .card h3 {{ margin: 0 0 10px 0; font-size: 16px; color: #555; }}
-        .card p {{ margin: 0; font-size: 24px; font-weight: bold; color: #1e3d59; }}
-        table {{ width: 100%; border-collapse: collapse; margin-top: 25px; }}
-        th, td {{ padding: 12px 14px; text-align: left; border-bottom: 1px solid #dee2e6; vertical-align: top; }}
-        th {{ background-color: #f8f9fa; color: #495057; }}
-        tr:hover {{ background-color: #f5f8ff; }}
-        .footer {{
-            margin-top: 35px; padding-top: 15px; border-top: 1px solid #dee2e6;
-            font-size: 13px; color: #6c757d;
-        }}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rapport de surveillance MLOps - Scoring de risque d'impayés télécom</title>
+<style>__CSS__</style>
 </head>
 <body>
-<div class="container">
-    <h1>Tableau de Bord d'Observabilite & Surveillance MLOps</h1>
-    <p><b>Projet :</b> Detection de Risque d'Impayes Telecom (Nigeria) | <b>Moteur :</b> XGBoost + Evidently & PSI</p>
+<div class="page">
+  <header>
+    <h1>Rapport de surveillance du modèle</h1>
+    <p class="subtitle">Détection du risque d'impayés télécom (Nigeria)</p>
+    <dl class="meta">
+      <div><dt>Modèle</dt><dd>XGBoost</dd></div>
+      <div><dt>Surveillance</dt><dd>Evidently et PSI</dd></div>
+      <div><dt>Scénarios évalués</dt><dd>__NB__</dd></div>
+      <div><dt>Généré le</dt><dd>__DATE__</dd></div>
+    </dl>
+  </header>
 
-    <div class="summary-box">
-        <div class="card">
-            <h3>Seuils d'Alerte PSI</h3>
-            <p>&lt; 0.10 (Stable) | &ge; 0.20 (Alerte)</p>
-        </div>
-        <div class="card">
-            <h3>Seuil Performance F1</h3>
-            <p>&ge; 0.44 (Nominal) | &lt; 0.38 (Critique)</p>
-        </div>
-        <div class="card">
-            <h3>Seuil Latence (R10)</h3>
-            <p>&lt; 150 ms (Normal) | &gt; 300 ms (Alerte)</p>
-        </div>
-    </div>
+  <h2>Synthèse</h2>
+  <p class="lead">__SYNTHESE__</p>
 
-    <h2>Synthese des Scenarios Testes [Donnees Reelles & Simulations D12]</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Scenario</th>
-                <th style="text-align:center;">Statut</th>
-                <th>F1 Macro</th>
-                <th>Rappel 'High'</th>
-                <th>Latence</th>
-                <th>Derive Variables (PSI)</th>
-                <th>Alertes Declenchees</th>
-            </tr>
-        </thead>
-        <tbody>
-            {rows_html}
-        </tbody>
+  <h2>Seuils de surveillance</h2>
+  <div class="table-wrap">
+    <table class="thresholds">
+      <thead><tr><th>Indicateur</th><th>Nominal</th><th>Alerte</th></tr></thead>
+      <tbody>
+        <tr><td>Dérive des variables (PSI)</td><td>&lt; __PSI_S__ (stable)</td><td>&ge; __PSI_A__</td></tr>
+        <tr><td>F1 macro</td><td>&ge; __F1_N__</td><td>&lt; __F1_C__ (critique)</td></tr>
+        <tr><td>Latence moyenne (R10)</td><td>&lt; __LAT_N__ ms</td><td>&gt; __LAT_A__ ms</td></tr>
+      </tbody>
     </table>
+  </div>
 
-    <div class="footer">
-        <p><b>Auditabilite & Regles MLOps :</b> Tous les scenarios avec injection de derive sont marques
-        <b>[SIMULE]</b>. En cas d'alerte critique sur les donnees ou la performance, le pipeline declenche
-        une notification et oriente vers la validation humaine avant tout redeploiement automatique.</p>
-        <p>Genere automatiquement par <code>src/06_monitoring.py</code> pour l'Etape 8.</p>
-    </div>
+  <h2>Résultats par scénario</h2>
+  <div class="table-wrap">
+    <table class="scenarios">
+      <thead>
+        <tr>
+          <th>Scénario</th>
+          <th>Statut</th>
+          <th class="num">F1 macro</th>
+          <th class="num">Rappel « High »</th>
+          <th class="num">Latence moy.</th>
+          <th>Variables en dérive (PSI &ge; __PSI_S__)</th>
+          <th>Alertes</th>
+        </tr>
+      </thead>
+      <tbody>
+__ROWS__
+      </tbody>
+    </table>
+  </div>
+
+  <div class="notes">
+    <p><b>Auditabilité.</b> Les scénarios avec injection de dérive sont marqués [SIMULE]. Lors d'une alerte
+    critique sur les données ou la performance, le pipeline envoie une notification et demande une validation
+    humaine avant tout redéploiement automatique.</p>
+    <p>Rapport généré automatiquement par <code>src/06_monitoring.py</code> (étape 8).</p>
+  </div>
 </div>
 </body>
 </html>
 """
-    output_path.write_text(html, encoding="utf-8")
+
+    def num(v):
+        try:
+            return float(v)
+        except (TypeError, ValueError):
+            return None
+
+    def fmt(v, nd=3):
+        f = num(v)
+        return esc(str(v)) if f is None else f"{f:.{nd}f}"
+
+    def niveau(v, warn, crit, inverse=False):
+        """Classe CSS ('warn'/'crit'/'') selon des seuils. inverse=True : plus bas = pire."""
+        f = num(v)
+        if f is None:
+            return ""
+        if inverse:
+            return "crit" if f < crit else "warn" if f < warn else ""
+        return "crit" if f >= crit else "warn" if f >= warn else ""
+
+    rows = []
+    for s in resultats_scenarios:
+        classe, libelle = STATUTS.get(s["statut_global"], ("", esc(str(s["statut_global"]))))
+
+        psi_items = sorted(
+            ((k, v) for k, v in s["psi_par_feature"].items() if (num(v) or 0) >= PSI_STABLE),
+            key=lambda kv: -(num(kv[1]) or 0),
+        )
+        if psi_items:
+            psi_html = "".join(
+                f'<span class="psi {niveau(v, PSI_STABLE, PSI_ALERTE)}">{esc(str(k))} : <b>{fmt(v)}</b></span>'
+                for k, v in psi_items
+            )
+        else:
+            psi_html = f'<span class="muted">Aucune (toutes &lt; {PSI_STABLE:.2f})</span>'
+
+        if s["alertes"]:
+            items = "".join(
+                f'<li><span class="sev {STATUTS.get(a["severite"], ("", ""))[0]}">'
+                f'{esc(str(a["severite"]))}</span> : {esc(str(a["message"]))}</li>'
+                for a in s["alertes"]
+            )
+            alertes_html = f'<ul class="alerts">{items}</ul>'
+        else:
+            alertes_html = '<span class="muted">Aucune alerte</span>'
+
+        cls_f1 = niveau(s["f1_macro"], F1_NOMINAL, F1_CRITIQUE, inverse=True)
+        cls_lat = niveau(s["latence_moyenne_ms"], LAT_NORMALE_MS + 1e-9, LAT_ALERTE_MS + 1e-9)
+
+        rows.append(
+            f'        <tr class="{classe}">\n'
+            f'          <td><div class="name">{esc(str(s["scenario"]))}</div>'
+            f'<div class="desc">{esc(str(s["description"]))}</div></td>\n'
+            f'          <td><span class="tag {classe}">{libelle}</span></td>\n'
+            f'          <td class="num {cls_f1}">{fmt(s["f1_macro"])}</td>\n'
+            f'          <td class="num">{fmt(s["recall_high"])}</td>\n'
+            f'          <td class="num {cls_lat}">{fmt(s["latence_moyenne_ms"], 1)} ms</td>\n'
+            f'          <td>{psi_html}</td>\n'
+            f'          <td>{alertes_html}</td>\n'
+            f'        </tr>'
+        )
+
+    n = len(resultats_scenarios)
+    cpt = Counter(s["statut_global"] for s in resultats_scenarios)
+    parts = [
+        f'<span class="count {cls}">{cpt[cle]} {lib.lower()}</span>'
+        for cle, (cls, lib) in STATUTS.items() if cpt.get(cle)
+    ]
+    synthese = f"{n} scénario{'s' if n > 1 else ''} évalué{'s' if n > 1 else ''} : " + ", ".join(parts) + "."
+
+    page = template
+    for token, val in {
+        "__CSS__": css,
+        "__NB__": str(n),
+        "__DATE__": datetime.now().strftime("%d/%m/%Y à %H:%M"),
+        "__SYNTHESE__": synthese,
+        "__PSI_S__": f"{PSI_STABLE:.2f}",
+        "__PSI_A__": f"{PSI_ALERTE:.2f}",
+        "__F1_N__": f"{F1_NOMINAL:.2f}",
+        "__F1_C__": f"{F1_CRITIQUE:.2f}",
+        "__LAT_N__": str(LAT_NORMALE_MS),
+        "__LAT_A__": str(LAT_ALERTE_MS),
+        "__ROWS__": "\n".join(rows),
+    }.items():
+        page = page.replace(token, val)
+
+    output_path.write_text(page, encoding="utf-8")
     print(f"[OK] Dashboard HTML sauvegarde dans : {output_path}")
 
 

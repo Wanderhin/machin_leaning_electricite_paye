@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # 1. API de serving FastAPI (Modele XGBoost Credit Scoring)
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: telecom_ml_api
+    ports:
+      - "8000:8000"
+    environment:
+      - MODEL_DIR=/app/models
+      - PREDICTION_LOG=/app/logs/predictions.jsonl
+      - EVAL_REPORT=/app/reports/04_evaluation_test.json
+    volumes:
+      - ./logs:/app/logs
+      - ./reports:/app/reports
+    networks:
+      - mlops-network
+
+  # 2. Collecteur de métriques Prometheus (Scrape /metrics toutes les 5s)
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: telecom_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks:
+      - mlops-network
+    depends_on:
+      - api
+
+  # 3. Tableaux de bord Grafana en temps réel (Préconfiguré automatiquement)
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: telecom_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    networks:
+      - mlops-network
+    depends_on:
+      - prometheus
+
+networks:
+  mlops-network:
+    driver: bridge

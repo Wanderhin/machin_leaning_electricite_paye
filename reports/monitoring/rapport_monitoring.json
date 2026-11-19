@@ -1,7 +1,7 @@
 {
-  "date_execution": "2026-11-15 16:43:37",
+  "date_execution": "2026-11-19 02:55:01",
   "reference": {
-    "taille": 4000,
+    "taille": 20000,
     "source": "data/processed/train.csv"
   },
   "resultats_scenarios": [
@@ -9,23 +9,23 @@
       "scenario": "Scenario A (Nominal)",
       "description": "Donnees de test reelles sans alteration. Absence de fausse alerte.",
       "statut_global": "OK",
-      "nb_echantillons": 2000,
+      "nb_echantillons": 10000,
       "latence_moyenne_ms": 72.0,
-      "f1_macro": 0.455,
-      "f1_high": 0.5618,
-      "recall_high": 0.6752,
+      "f1_macro": 0.4592,
+      "f1_high": 0.5637,
+      "recall_high": 0.6668,
       "distribution_predictions": {
-        "low": 0.642,
-        "high": 0.33,
-        "medium": 0.027
+        "low": 0.663,
+        "high": 0.308,
+        "medium": 0.028
       },
       "psi_par_feature": {
-        "tenure_months": 0.0045,
-        "avg_monthly_spend_ngn": 0.0075,
-        "recharge_frequency_per_month": 0.0091,
-        "payment_consistency_score": 0.0066,
-        "late_payment_count": 0.0019,
-        "operator": 0.0034,
+        "tenure_months": 0.0008,
+        "avg_monthly_spend_ngn": 0.001,
+        "recharge_frequency_per_month": 0.0012,
+        "payment_consistency_score": 0.0014,
+        "late_payment_count": 0.0001,
+        "operator": 0.0001,
         "account_type": 0.0
       },
       "derives_detectees": [],
@@ -35,39 +35,39 @@
       "scenario": "Scenario B (Data Drift [SIMULE])",
       "description": "Choc inflationniste (+60% depenses, retards accrus).",
       "statut_global": "CRITIQUE",
-      "nb_echantillons": 2000,
+      "nb_echantillons": 10000,
       "latence_moyenne_ms": 75.0,
-      "f1_macro": 0.3883,
-      "f1_high": 0.4791,
-      "recall_high": 0.7771,
+      "f1_macro": 0.3875,
+      "f1_high": 0.4676,
+      "recall_high": 0.7732,
       "distribution_predictions": {
-        "high": 0.528,
-        "low": 0.416,
-        "medium": 0.055
+        "high": 0.521,
+        "low": 0.428,
+        "medium": 0.051
       },
       "psi_par_feature": {
-        "tenure_months": 0.0045,
-        "avg_monthly_spend_ngn": 0.6644,
-        "recharge_frequency_per_month": 3.4144,
-        "payment_consistency_score": 0.0066,
-        "late_payment_count": 4.1095,
-        "operator": 0.0034,
+        "tenure_months": 0.0008,
+        "avg_monthly_spend_ngn": 0.6776,
+        "recharge_frequency_per_month": 3.332,
+        "payment_consistency_score": 0.0014,
+        "late_payment_count": 4.5058,
+        "operator": 0.0001,
         "account_type": 0.0
       },
       "derives_detectees": [
         {
           "feature": "avg_monthly_spend_ngn",
-          "psi": 0.6644,
+          "psi": 0.6776,
           "statut": "CRITIQUE"
         },
         {
           "feature": "recharge_frequency_per_month",
-          "psi": 3.4144,
+          "psi": 3.332,
           "statut": "CRITIQUE"
         },
         {
           "feature": "late_payment_count",
-          "psi": 4.1095,
+          "psi": 4.5058,
           "statut": "CRITIQUE"
         }
       ],
@@ -75,12 +75,12 @@
         {
           "type": "DATA_DRIFT",
           "severite": "CRITIQUE",
-          "message": "Data drift detecte sur 3 variable(s) (PSI max = 4.1095)."
+          "message": "Data drift detecte sur 3 variable(s) (PSI max = 4.5058)."
         },
         {
           "type": "CONCEPT_DRIFT_PERFORMANCE",
           "severite": "WARNING",
-          "message": "F1-macro en baisse sensible (0.3883 < seuil 0.4400)."
+          "message": "F1-macro en baisse sensible (0.3875 < seuil 0.4400)."
         }
       ]
     },
@@ -88,23 +88,23 @@
       "scenario": "Scenario C (Concept Drift [SIMULE])",
       "description": "Rupture de comportement. Chute de F1 sans modif entrees.",
       "statut_global": "CRITIQUE",
-      "nb_echantillons": 2000,
+      "nb_echantillons": 10000,
       "latence_moyenne_ms": 74.0,
-      "f1_macro": 0.374,
-      "f1_high": 0.5679,
-      "recall_high": 0.4237,
+      "f1_macro": 0.3751,
+      "f1_high": 0.5499,
+      "recall_high": 0.4019,
       "distribution_predictions": {
-        "low": 0.642,
-        "high": 0.33,
-        "medium": 0.027
+        "low": 0.663,
+        "high": 0.308,
+        "medium": 0.028
       },
       "psi_par_feature": {
-        "tenure_months": 0.0045,
-        "avg_monthly_spend_ngn": 0.0075,
-        "recharge_frequency_per_month": 0.0091,
-        "payment_consistency_score": 0.0066,
-        "late_payment_count": 0.0019,
-        "operator": 0.0034,
+        "tenure_months": 0.0008,
+        "avg_monthly_spend_ngn": 0.001,
+        "recharge_frequency_per_month": 0.0012,
+        "payment_consistency_score": 0.0014,
+        "late_payment_count": 0.0001,
+        "operator": 0.0001,
         "account_type": 0.0
       },
       "derives_detectees": [],
@@ -112,12 +112,12 @@
         {
           "type": "CONCEPT_DRIFT_PERFORMANCE",
           "severite": "CRITIQUE",
-          "message": "Chute critique du F1-macro (0.3740 < seuil 0.3800)."
+          "message": "Chute critique du F1-macro (0.3751 < seuil 0.3800)."
         },
         {
           "type": "RECOUVREMENT_RISQUE",
           "severite": "CRITIQUE",
-          "message": "Rappel classe high insuffisant (0.4237 < 0.4500) : impayes non detectes."
+          "message": "Rappel classe high insuffisant (0.4019 < 0.4500) : impayes non detectes."
         }
       ]
     },
@@ -125,23 +125,23 @@
       "scenario": "Scenario D (Incident Infra [SIMULE])",
       "description": "Latence anormale illustrant la question R10 (880 ms).",
       "statut_global": "CRITIQUE",
-      "nb_echantillons": 2000,
+      "nb_echantillons": 10000,
       "latence_moyenne_ms": 880.0,
-      "f1_macro": 0.455,
-      "f1_high": 0.5618,
-      "recall_high": 0.6752,
+      "f1_macro": 0.4592,
+      "f1_high": 0.5637,
+      "recall_high": 0.6668,
       "distribution_predictions": {
-        "low": 0.642,
-        "high": 0.33,
-        "medium": 0.027
+        "low": 0.663,
+        "high": 0.308,
+        "medium": 0.028
       },
       "psi_par_feature": {
-        "tenure_months": 0.0045,
-        "avg_monthly_spend_ngn": 0.0075,
-        "recharge_frequency_per_month": 0.0091,
-        "payment_consistency_score": 0.0066,
-        "late_payment_count": 0.0019,
-        "operator": 0.0034,
+        "tenure_months": 0.0008,
+        "avg_monthly_spend_ngn": 0.001,
+        "recharge_frequency_per_month": 0.0012,
+        "payment_consistency_score": 0.0014,
+        "late_payment_count": 0.0001,
+        "operator": 0.0001,
         "account_type": 0.0
       },
       "derives_detectees": [],
